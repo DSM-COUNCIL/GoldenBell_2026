@@ -24,6 +24,9 @@ School festival Golden Bell service for roughly 200 students.
 - `/admin` - operator control surface
 - `/stage` - big-screen stage display
 - `/api/admin/game` - protected admin mutation endpoint
+- `/api/admin/seed` - protected game seed endpoint
+- `/api/participant/join` - participant join endpoint using Firebase ID token
+- `/api/participant/answer` - participant answer submission endpoint using Firebase ID token
 
 ## Local Setup
 
@@ -74,11 +77,11 @@ Do not commit `.env.local` or production secrets.
 
 This scaffold includes `firebase.json` and `database.rules.json` so the Realtime Database security posture is versioned. The initial rules split public game display data from sensitive operational data:
 
-- `publicGames/{gameId}` is readable by signed-in participants and contains public state plus sanitized question display data.
-- `games/{gameId}` is not broadly readable by clients.
-- Participant and answer records are participant-scoped when read access is later needed.
+- `publicGames/{gameId}/state` and `publicGames/{gameId}/questions` are readable by signed-in participants. Question payloads are sanitized and never include answer keys.
+- `games/{gameId}/state` and `games/{gameId}/questions` remain private operational data.
+- Participant and answer records are only readable by the matching anonymous-auth session when scoped reads are needed.
 - All direct client writes are denied.
-- Admin mutations use the server-only Firebase Admin SDK through `/api/admin/game`.
+- Admin and participant mutations use server-only Firebase Admin SDK routes: `/api/admin/game`, `/api/admin/seed`, `/api/participant/join`, and `/api/participant/answer`.
 
 Deploy rules after selecting the Firebase project:
 
@@ -87,7 +90,7 @@ firebase use <project-id>
 firebase deploy --only database
 ```
 
-Participant answer writes can later be opened with narrowly scoped rules after the submission API/client contract is finalized. Until then, server-side APIs should write answers and participant state.
+Participant answer writes stay server-mediated through `/api/participant/answer`. Student clients authenticate with Firebase Anonymous Auth, send the ID token to the server, and the server writes participant and answer state with Firebase Admin SDK.
 
 ## Data Model Draft
 
@@ -108,6 +111,9 @@ publicGames/{gameId}/questions/{questionId}
   imagePath
   timeLimitSeconds
   isRevival
+
+games/{gameId}/state
+  same fields as public state, plus private operational updates
 
 games/{gameId}/questions/{questionId}
   answer
@@ -144,4 +150,5 @@ npm run audit
 - Multiple choice and OX questions use a 7 second default timer.
 - Short-answer questions use per-question timers and accepted answer lists.
 - Timer screens calculate remaining time from `startedAt` and `timeLimitSeconds`; the app should not write timer ticks to Firebase every second.
+- Once the game has started, new joins are blocked while existing participants can reconnect with the same anonymous-auth session.
 - Before the event, run a rehearsal with at least 20-30 devices on the school Wi-Fi.

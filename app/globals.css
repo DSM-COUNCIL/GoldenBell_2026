@@ -338,3 +338,52 @@ input {
     font-size: 36px;
   }
 }
+
+select {
+  min-height: 44px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: white;
+  color: var(--text);
+  padding: 0 12px;
+}
+
+.admin-setup {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  align-items: end;
+  margin-bottom: 18px;
+}
+
+.status-line {
+  margin: 0;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.danger-text {
+  color: var(--danger);
+}
+
+.short-answer {
+  display: grid;
+  grid-template-columns: 1fr 120px;
+  gap: 10px;
+}
+
+.stage-game-input {
+  max-width: 280px;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.stage-game-input input {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.28);
+  color: white;
+}
+
+@media (max-width: 760px) {
+  .admin-setup,
+  .short-answer {
+    grid-template-columns: 1fr;
+  }
+}

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { actionPatch, validateAdminCommand } from "@/lib/admin/commands";
 import { isAuthorizedAdminRequest, validateAdminSecret } from "@/lib/admin/security";
 import { getAdminDatabase } from "@/lib/firebase/admin";
-import { gamePath, publicGameStatePath } from "@/lib/firebase/paths";
+import { privateGameStatePath, publicGameStatePath } from "@/lib/firebase/paths";
 
 const RATE_LIMIT_WINDOW_MS = 60_000;
 const RATE_LIMIT_MAX_FAILURES = 8;
@@ -89,7 +89,7 @@ export async function POST(request: Request) {
   }
 
   await Promise.all([
-    db.ref(gamePath(command.gameId)).update(patch),
+    db.ref(privateGameStatePath(command.gameId)).update(patch),
     db.ref(publicGameStatePath(command.gameId)).update(patch),
   ]);
 

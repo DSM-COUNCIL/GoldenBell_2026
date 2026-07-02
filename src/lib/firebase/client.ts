@@ -40,3 +40,19 @@ export async function ensureAnonymousSession(): Promise<string> {
   const credential = await signInAnonymously(auth);
   return credential.user.uid;
 }
+
+export async function ensureAnonymousIdToken(): Promise<string> {
+  const auth = getFirebaseAuth();
+
+  if (!auth.currentUser) {
+    await signInAnonymously(auth);
+  }
+
+  const user = auth.currentUser;
+
+  if (!user) {
+    throw new Error("Anonymous Firebase session was not created.");
+  }
+
+  return user.getIdToken();
+}
