@@ -1,4 +1,5 @@
 import { cert, getApps, initializeApp } from "firebase-admin/app";
+import { getAuth } from "firebase-admin/auth";
 import { getDatabase } from "firebase-admin/database";
 
 function getPrivateKey(): string | undefined {
@@ -14,12 +15,12 @@ export function isFirebaseAdminConfigured(): boolean {
   );
 }
 
-export function getAdminDatabase() {
+function getAdminApp() {
   if (!isFirebaseAdminConfigured()) {
     throw new Error("Firebase admin env vars are not configured.");
   }
 
-  const app =
+  return (
     getApps()[0] ??
     initializeApp({
       credential: cert({
@@ -28,7 +29,14 @@ export function getAdminDatabase() {
         privateKey: getPrivateKey(),
       }),
       databaseURL: process.env.FIREBASE_DATABASE_URL,
-    });
+    })
+  );
+}
 
-  return getDatabase(app);
+export function getAdminDatabase() {
+  return getDatabase(getAdminApp());
+}
+
+export function getAdminAuth() {
+  return getAuth(getAdminApp());
 }

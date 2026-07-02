@@ -2,23 +2,14 @@
   "rules": {
     "publicGames": {
       "$gameId": {
-        ".read": "auth != null",
         ".write": false,
         "state": {
           ".read": "auth != null",
           ".write": false
         },
         "questions": {
-          "$questionId": {
-            ".read": "auth != null",
-            ".write": false,
-            "answer": {
-              ".read": false
-            },
-            "acceptedAnswers": {
-              ".read": false
-            }
-          }
+          ".read": "auth != null",
+          ".write": false
         }
       }
     },
@@ -26,6 +17,14 @@
       "$gameId": {
         ".read": false,
         ".write": false,
+        "state": {
+          ".read": false,
+          ".write": false
+        },
+        "questions": {
+          ".read": false,
+          ".write": false
+        },
         "participants": {
           "$participantId": {
             ".read": "auth != null && data.child('authUid').val() === auth.uid",
