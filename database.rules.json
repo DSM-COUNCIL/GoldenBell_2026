@@ -1,0 +1,46 @@
+{
+  "rules": {
+    "publicGames": {
+      "$gameId": {
+        ".read": "auth != null",
+        ".write": false,
+        "state": {
+          ".read": "auth != null",
+          ".write": false
+        },
+        "questions": {
+          "$questionId": {
+            ".read": "auth != null",
+            ".write": false,
+            "answer": {
+              ".read": false
+            },
+            "acceptedAnswers": {
+              ".read": false
+            }
+          }
+        }
+      }
+    },
+    "games": {
+      "$gameId": {
+        ".read": false,
+        ".write": false,
+        "participants": {
+          "$participantId": {
+            ".read": "auth != null && data.child('authUid').val() === auth.uid",
+            ".write": false
+          }
+        },
+        "answers": {
+          "$questionId": {
+            "$participantId": {
+              ".read": "auth != null && data.child('participantAuthUid').val() === auth.uid",
+              ".write": false
+            }
+          }
+        }
+      }
+    }
+  }
+}
