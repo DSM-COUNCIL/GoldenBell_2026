@@ -10,7 +10,10 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "audit": "npm audit --audit-level=high"
+    "audit": "npm audit --audit-level=high",
+    "env:check": "node scripts/check-env.mjs",
+    "smoke:firebase": "node scripts/firebase-smoke.mjs",
+    "smoke:api": "node scripts/api-smoke.mjs"
   },
   "repository": {
     "type": "git",
