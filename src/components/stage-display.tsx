@@ -28,6 +28,28 @@ export function StageDisplay() {
     );
   }
 
+  const finished = state?.status === "finished";
+  const revealing = state?.phase === "reveal";
+  // Highlight the correct choice only when the current question is the one
+  // being revealed, so answers never leak on the big screen early.
+  const revealedForCurrent = revealing && state?.revealQuestionId === current?.id;
+
+  if (finished) {
+    return (
+      <main className="stage-screen">
+        <label className="stage-game-input">
+          Game
+          <input value={gameId} onChange={(event) => setGameId(event.target.value)} />
+        </label>
+        <section className="stage-winner">
+          <p>🎉 골든벨 우승</p>
+          <h1>{state?.winnerNickname ?? "우승자 없음"}</h1>
+          <span>최후의 1인이 탄생했습니다</span>
+        </section>
+      </main>
+    );
+  }
+
   return (
     <main className="stage-screen">
       <label className="stage-game-input">
@@ -41,16 +63,25 @@ export function StageDisplay() {
       </section>
 
       <section className="stage-question">
-        <p>{current?.isRevival ? "패자부활전" : state?.phase ?? "골든벨"}</p>
+        <p>{current?.isRevival ? "패자부활전" : revealing ? "정답 공개" : state?.phase ?? "골든벨"}</p>
         <h1>{current?.text ?? "현재 문제가 없습니다."}</h1>
         <div className="stage-choices">
           {current?.choices?.map((choice) => (
-            <div key={choice.id}>
+            <div
+              key={choice.id}
+              className={revealedForCurrent && state?.revealAnswer === choice.id ? "correct" : ""}
+            >
               <strong>{choice.id}</strong>
               <span>{choice.label}</span>
             </div>
           ))}
         </div>
+        {revealedForCurrent ? (
+          <p className="stage-answer">정답: {state?.revealAnswerLabel ?? "-"}</p>
+        ) : null}
+        {revealedForCurrent && state?.rematch ? (
+          <p className="stage-answer danger">전원 탈락 · 이 문제는 무효, 재대결을 진행합니다</p>
+        ) : null}
       </section>
     </main>
   );

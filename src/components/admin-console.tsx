@@ -5,6 +5,15 @@ import { isFirebaseClientConfigured } from "@/lib/firebase/client";
 import { usePublicGame } from "./use-public-game";
 import { TimerBadge } from "./timer-badge";
 
+type RevealSummary = {
+  correctLabel: string;
+  survivorCount: number;
+  eliminatedCount: number;
+  revivedCount: number;
+  outcome: "continue" | "winner" | "rematch";
+  winnerNickname: string | null;
+};
+
 async function adminPost<T>(url: string, secret: string, body: Record<string, unknown>): Promise<T> {
   const response = await fetch(url, {
     method: "POST",
@@ -65,6 +74,31 @@ export function AdminConsole() {
     );
   }
 
+  async function reveal() {
+    setBusy(true);
+    setMessage(null);
+
+    try {
+      const result = await adminPost<{ reveal: RevealSummary }>("/api/admin/game", secret, {
+        gameId,
+        action: "reveal",
+      });
+      const summary = result.reveal;
+      const parts = [`정답: ${summary.correctLabel}`, `생존 ${summary.survivorCount}명`];
+
+      if (summary.eliminatedCount) parts.push(`탈락 ${summary.eliminatedCount}명`);
+      if (summary.revivedCount) parts.push(`부활 ${summary.revivedCount}명`);
+      if (summary.outcome === "winner") parts.push(`🎉 우승: ${summary.winnerNickname ?? "-"}`);
+      if (summary.outcome === "rematch") parts.push("전원 탈락 · 재대결 진행");
+
+      setMessage(parts.join(" · "));
+    } catch (caught) {
+      setMessage(caught instanceof Error ? caught.message : "정답 공개 실패");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <main className="page admin-page">
       <section className="hero-panel compact">
@@ -83,9 +117,13 @@ export function AdminConsole() {
 
       <section className="dashboard-grid">
         <div className="metric"><span>생존자</span><strong>{state?.survivorCount ?? 0}</strong></div>
-        <div className="metric"><span>현재 단계</span><strong>{state?.phase ?? "-"}</strong></div>
+        <div className="metric"><span>현재 단계</span><strong>{state?.status === "finished" ? "종료" : state?.phase ?? "-"}</strong></div>
         <div className="metric"><span>타이머</span><TimerBadge startedAt={state?.startedAt ?? null} timeLimitSeconds={state?.timeLimitSeconds ?? 0} /></div>
       </section>
+
+      {state?.status === "finished" ? (
+        <aside className="notice win-notice">🎉 우승자: {state?.winnerNickname ?? "-"} · 게임이 종료되었습니다.</aside>
+      ) : null}
 
       <section className="panel controls-panel">
         <h2>진행 제어</h2>
@@ -101,7 +139,7 @@ export function AdminConsole() {
           <button disabled={busy} type="button" onClick={() => control("pause")}>일시정지</button>
           <button disabled={busy} type="button" onClick={() => control("resume")}>재개</button>
           <button disabled={busy} type="button" onClick={() => control("close")}>강제 마감</button>
-          <button disabled={busy} type="button" onClick={() => control("reveal")}>정답 공개</button>
+          <button disabled={busy} type="button" onClick={() => reveal()}>정답 공개</button>
           <button disabled={busy || !selectedQuestion} type="button" onClick={() => control("next", { phase: selectedQuestion?.isRevival ? "revival" : "answering" })}>다음 문제</button>
         </div>
       </section>

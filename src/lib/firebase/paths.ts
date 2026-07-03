@@ -15,3 +15,6 @@ export const answersPath = (gameId: string, questionId: string) =>
   `${gamePath(gameId)}/answers/${questionId}`;
 export const answerPath = (gameId: string, questionId: string, participantId: string) =>
   `${answersPath(gameId, questionId)}/${participantId}`;
+export const rosterPath = (gameId: string) => `${gamePath(gameId)}/roster`;
+export const rosterEntryPath = (gameId: string, studentId: string) =>
+  `${rosterPath(gameId)}/${studentId}`;

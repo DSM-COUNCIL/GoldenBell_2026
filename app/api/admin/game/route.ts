@@ -3,6 +3,8 @@ import { actionPatch, validateAdminCommand } from "@/lib/admin/commands";
 import { isAuthorizedAdminRequest, validateAdminSecret } from "@/lib/admin/security";
 import { getAdminDatabase } from "@/lib/firebase/admin";
 import { privateGameStatePath, publicGameStatePath } from "@/lib/firebase/paths";
+import { revealCurrentQuestion } from "@/lib/services/game-service";
+import { getErrorMessage, getErrorStatus } from "@/lib/services/errors";
 
 const RATE_LIMIT_WINDOW_MS = 60_000;
 const RATE_LIMIT_MAX_FAILURES = 8;
@@ -67,6 +69,18 @@ export async function POST(request: Request) {
 
   const { command } = validation;
   const db = getAdminDatabase();
+
+  // Reveal runs the resolution sweep (grade everyone, eliminate wrong and
+  // non-responders, decide winner/rematch) instead of a plain state patch.
+  if (command.action === "reveal") {
+    try {
+      const reveal = await revealCurrentQuestion(command.gameId);
+      return NextResponse.json({ ok: true, reveal });
+    } catch (error) {
+      return NextResponse.json({ error: getErrorMessage(error) }, { status: getErrorStatus(error) });
+    }
+  }
+
   const patch: Record<string, unknown> = {
     ...actionPatch[command.action],
     updatedAt: now,
@@ -74,6 +88,11 @@ export async function POST(request: Request) {
 
   if (command.action === "start" || command.action === "next") {
     patch.startedAt = now;
+    // A fresh question clears the previous reveal so stale answers do not linger.
+    patch.revealQuestionId = null;
+    patch.revealAnswer = null;
+    patch.revealAnswerLabel = null;
+    patch.rematch = false;
   }
 
   if (command.questionId) {

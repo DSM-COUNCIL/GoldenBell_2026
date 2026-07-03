@@ -31,6 +31,17 @@ export type GameState = {
   startedAt: number | null;
   timeLimitSeconds: number;
   survivorCount: number;
+  // Winner is decided when exactly one survivor remains.
+  winnerId?: string | null;
+  winnerNickname?: string | null;
+  // Reveal payload. Only the currently revealed answer is exposed publicly;
+  // every other answer key stays private.
+  revealQuestionId?: string | null;
+  revealAnswer?: string | null;
+  revealAnswerLabel?: string | null;
+  // True when the last question eliminated every survivor and was voided,
+  // so the admin should re-run it with the same survivors (rematch).
+  rematch?: boolean;
 };
 
 export type Participant = {
