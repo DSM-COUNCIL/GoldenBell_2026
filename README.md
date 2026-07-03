@@ -33,6 +33,7 @@ School festival Golden Bell service for roughly 200 students.
 ```bash
 npm install
 cp .env.example .env.local
+npm run env:check
 npm run dev
 ```
 
@@ -60,7 +61,7 @@ FIREBASE_DATABASE_URL=
 ADMIN_SECRET=
 ```
 
-`ADMIN_SECRET` must be a random value with at least 32 characters. Do not use a placeholder or a human-readable password. Store it only in `.env.local` and Vercel environment variables.
+`ADMIN_SECRET` must be a random value with at least 32 characters. Do not use a placeholder or a human-readable password. Store it only in `.env.local` and Vercel environment variables. `FIREBASE_PRIVATE_KEY` should be stored as one line with escaped `\n` characters.
 
 Example admin request:
 
@@ -71,7 +72,7 @@ curl -X POST "$APP_URL/api/admin/game" \
   -d '{"gameId":"festival-2026","action":"start","questionId":"easy-001","timeLimitSeconds":7}'
 ```
 
-Do not commit `.env.local` or production secrets.
+Do not commit `.env.local` or production secrets. See [Firebase Connection Runbook](docs/firebase-connection.md) for the full local, Firebase CLI, and Vercel setup flow.
 
 ## Firebase Rules
 
@@ -86,11 +87,29 @@ This scaffold includes `firebase.json` and `database.rules.json` so the Realtime
 Deploy rules after selecting the Firebase project:
 
 ```bash
+firebase login
 firebase use <project-id>
 firebase deploy --only database
 ```
 
 Participant answer writes stay server-mediated through `/api/participant/answer`. Student clients authenticate with Firebase Anonymous Auth, send the ID token to the server, and the server writes participant and answer state with Firebase Admin SDK.
+
+## Firebase Connection Smoke
+
+After `.env.local` is filled, run the direct Firebase smoke test:
+
+```bash
+npm run smoke:firebase
+```
+
+Then keep the dev server running and test the app API path end to end:
+
+```bash
+npm run dev
+npm run smoke:api
+```
+
+`smoke:api` seeds a temporary game, joins one anonymous participant, starts `easy-001`, submits the correct answer, and removes the smoke game data unless `SMOKE_KEEP_DATA=1`.
 
 ## Data Model Draft
 
@@ -138,11 +157,14 @@ games/{gameId}/answers/{questionId}/{participantId}
 ## Verification
 
 ```bash
+npm run env:check
 npm run test
 npm run lint
 npm run typecheck
 npm run build
 npm run audit
+npm run smoke:firebase
+npm run smoke:api
 ```
 
 ## MVP Notes
