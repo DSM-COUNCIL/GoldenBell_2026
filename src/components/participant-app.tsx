@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { ensureAnonymousIdToken, isFirebaseClientConfigured } from "@/lib/firebase/client";
 import type { Participant } from "@/lib/game/types";
 import { loadParticipantSession, saveParticipantSession } from "@/lib/participant/storage";
+import { phaseLabel } from "@/lib/game/labels";
 import { usePublicGame } from "./use-public-game";
 import { useParticipantRecord } from "./use-participant-record";
 import { TimerBadge } from "./timer-badge";
@@ -12,6 +13,8 @@ type JoinResponse = {
   participant: Participant;
   participantId: string;
 };
+
+const GAME_ID = "festival-2026";
 
 async function postJson<T>(url: string, body: Record<string, unknown>): Promise<T> {
   const response = await fetch(url, {
@@ -30,19 +33,17 @@ async function postJson<T>(url: string, body: Record<string, unknown>): Promise<
 
 export function ParticipantApp() {
   const configured = isFirebaseClientConfigured();
-  const [gameId, setGameId] = useState("festival-2026");
   const [code, setCode] = useState("GOLDEN");
   const [studentId, setStudentId] = useState("");
   const [name, setName] = useState("");
-  const [nickname, setNickname] = useState("");
   const [participant, setParticipant] = useState<Participant | null>(null);
   const [participantId, setParticipantId] = useState<string | null>(null);
   const [answerValue, setAnswerValue] = useState("");
   const [submittedValue, setSubmittedValue] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const { state, questions, loading, error } = usePublicGame(gameId);
-  const liveParticipant = useParticipantRecord(gameId, participantId);
+  const { state, questions, loading, error } = usePublicGame(GAME_ID);
+  const liveParticipant = useParticipantRecord(GAME_ID, participantId);
   const activeParticipant = liveParticipant ?? participant;
   const status = activeParticipant?.status ?? null;
 
@@ -51,7 +52,6 @@ export function ParticipantApp() {
 
     if (session) {
       window.queueMicrotask(() => {
-        setGameId(session.gameId);
         setParticipantId(session.participantId);
         setParticipant(session.participant);
       });
@@ -95,17 +95,17 @@ export function ParticipantApp() {
     try {
       const idToken = await ensureAnonymousIdToken();
       const result = await postJson<JoinResponse>("/api/participant/join", {
-        gameId,
+        gameId: GAME_ID,
         code,
         studentId,
         name,
-        nickname,
+        nickname: name,
         idToken,
       });
 
       setParticipant(result.participant);
       setParticipantId(result.participantId);
-      saveParticipantSession({ gameId, participantId: result.participantId, participant: result.participant });
+      saveParticipantSession({ gameId: GAME_ID, participantId: result.participantId, participant: result.participant });
       setMessage("입장 완료");
     } catch (caught) {
       setMessage(caught instanceof Error ? caught.message : "입장 실패");
@@ -125,7 +125,7 @@ export function ParticipantApp() {
     try {
       const idToken = await ensureAnonymousIdToken();
       await postJson("/api/participant/answer", {
-        gameId,
+        gameId: GAME_ID,
         questionId: currentQuestion.id,
         participantId,
         value,
@@ -258,29 +258,29 @@ export function ParticipantApp() {
   return (
     <main className="page participant-page">
       <section className="hero-panel">
-        <p className="eyebrow">학생 입장</p>
-        <h1>참가 코드로 입장하고 정답을 제출하세요.</h1>
-        <p className="lede">식별은 학번과 이름으로, 화면 분위기는 별명으로 관리합니다. 결과는 정답 공개 때 함께 발표됩니다.</p>
+        <p className="eyebrow">🔔 GoldenBell 2026</p>
+        <h1>골든벨 참가</h1>
       </section>
 
       <section className="grid two-cols">
         <form className="panel form-panel" onSubmit={handleJoin}>
-          <label>게임 ID<input value={gameId} onChange={(event) => setGameId(event.target.value)} /></label>
-          <label>참가 코드<input value={code} onChange={(event) => setCode(event.target.value.toUpperCase())} /></label>
-          <label>학번<input value={studentId} onChange={(event) => setStudentId(event.target.value)} /></label>
-          <label>이름<input value={name} onChange={(event) => setName(event.target.value)} /></label>
-          <label>별명<input value={nickname} onChange={(event) => setNickname(event.target.value)} /></label>
-          <button disabled={busy} type="submit">{participant ? "정보 갱신" : "입장"}</button>
+          <label>참가 코드<input value={code} onChange={(event) => setCode(event.target.value.toUpperCase())} placeholder="운영자가 안내한 코드" /></label>
+          <label>학번<input value={studentId} onChange={(event) => setStudentId(event.target.value)} placeholder="예: 1101" /></label>
+          <label>이름<input value={name} onChange={(event) => setName(event.target.value)} placeholder="실명" /></label>
+          <button disabled={busy} type="submit">{participant ? "정보 갱신" : "입장하기"}</button>
           {activeParticipant ? (
-            <p className={`status-line ${status === "eliminated" ? "danger-text" : ""}`}>
-              {activeParticipant.nickname} · {status === "alive" ? "생존" : "탈락"}
+            <p className="participant-identity">
+              <span className="who">{activeParticipant.nickname}</span>
+              <span className={`pill ${status === "alive" ? "pill-alive" : "pill-out"}`}>
+                {status === "alive" ? "● 생존" : "● 탈락"}
+              </span>
             </p>
           ) : null}
         </form>
 
         <section className="panel question-preview" aria-label="Current question">
           <div className="question-meta">
-            <span>{finished ? "종료" : phase}</span>
+            <span>{finished ? "종료" : phaseLabel(phase)}</span>
             <span>생존자 {state?.survivorCount ?? 0}명</span>
             <TimerBadge startedAt={state?.startedAt ?? null} timeLimitSeconds={state?.timeLimitSeconds ?? 0} />
           </div>

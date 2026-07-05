@@ -6,7 +6,7 @@ describe("admin security", () => {
   it("rejects missing, placeholder, and short admin secrets", () => {
     expect(validateAdminSecret(undefined)).toEqual({ ok: false, reason: "missing" });
     expect(validateAdminSecret("change-me-before-deploy")).toEqual({ ok: false, reason: "placeholder" });
-    expect(validateAdminSecret("short-secret")).toEqual({ ok: false, reason: "too_short" });
+    expect(validateAdminSecret("short")).toEqual({ ok: false, reason: "too_short" });
   });
 
   it("authorizes only a matching bearer token with a safe configured secret", () => {

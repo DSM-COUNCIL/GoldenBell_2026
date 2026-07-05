@@ -95,15 +95,22 @@ async function countSurvivors(gameId: string): Promise<number> {
   return Object.values(participants).filter((participant) => participant.status === "alive").length;
 }
 
-// Label to show on screen at reveal: the choice text for choice questions,
-// or the answer itself for short-answer questions.
+// Label to show on screen at reveal.
+// - Multiple choice: number + text, e.g. "1. 궂은 날씨".
+// - OX: just the label (O/X) since the id carries no extra meaning.
+// - Short answer: the answer text itself.
 function correctAnswerLabel(question: Question): string {
-  if (question.choices?.length) {
-    const choice = question.choices.find((entry) => entry.id === question.answer);
-    return choice ? choice.label : question.answer;
+  const choice = question.choices?.find((entry) => entry.id === question.answer);
+
+  if (!choice) {
+    return question.answer;
   }
 
-  return question.answer;
+  if (question.type === "ox") {
+    return choice.label;
+  }
+
+  return `${choice.id}. ${choice.label}`;
 }
 
 export async function seedGame({ gameId, code }: SeedGameInput) {
@@ -240,12 +247,9 @@ export async function revealCurrentQuestion(gameId: string): Promise<RevealResul
     throw new ServiceError("공개할 현재 문제가 없습니다.", 409);
   }
 
-  const question = await readRequired<Question>(
-    privateQuestionPath(gameId, questionId),
-    "Question not found",
-  );
-
-  const [participantsSnapshot, answersSnapshot] = await Promise.all([
+  // Fetch the question, participants, and answers in parallel to cut latency.
+  const [question, participantsSnapshot, answersSnapshot] = await Promise.all([
+    readRequired<Question>(privateQuestionPath(gameId, questionId), "Question not found"),
     db.ref(participantsPath(gameId)).get(),
     db.ref(answersPath(gameId, questionId)).get(),
   ]);

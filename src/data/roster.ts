@@ -57,7 +57,14 @@ function buildRoster(): RosterEntry[] {
   return entries;
 }
 
-export const rosterEntries: RosterEntry[] = buildRoster();
+// Temporary, easy-to-type accounts for testing. Remove before the real event.
+const TEST_ENTRIES: RosterEntry[] = [
+  { studentId: "0001", name: "김철수", grade: 0, classNo: 0, number: 1 },
+  { studentId: "0002", name: "이영희", grade: 0, classNo: 0, number: 2 },
+  { studentId: "0003", name: "박민수", grade: 0, classNo: 0, number: 3 },
+];
+
+export const rosterEntries: RosterEntry[] = [...TEST_ENTRIES, ...buildRoster()];
 
 // studentId -> canonical name lookup, seeded into the database at seed time.
 export function buildRosterRecord(): Record<string, string> {

@@ -13,7 +13,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body>
         <header className="topbar">
           <Link className="brand" href="/">
-            GoldenBell 2026
+            <span className="brand-mark" aria-hidden="true">🔔</span>
+            GoldenBell <span className="brand-year">2026</span>
           </Link>
           <nav aria-label="Primary">
             <Link href="/">학생</Link>

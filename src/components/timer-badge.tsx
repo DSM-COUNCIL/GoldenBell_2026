@@ -11,5 +11,9 @@ export function TimerBadge({ startedAt, timeLimitSeconds }: { startedAt: number 
     return () => window.clearInterval(id);
   }, []);
 
-  return <strong>{getRemainingSeconds(startedAt, timeLimitSeconds, now)}</strong>;
+  const remaining = getRemainingSeconds(startedAt, timeLimitSeconds, now);
+  const running = startedAt != null && timeLimitSeconds > 0;
+  const className = running && remaining <= 3 && remaining > 0 ? "timer-low" : running && remaining === 0 ? "timer-done" : "";
+
+  return <strong className={className}>{remaining}</strong>;
 }

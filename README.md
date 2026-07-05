@@ -60,7 +60,7 @@ FIREBASE_DATABASE_URL=
 ADMIN_SECRET=
 ```
 
-`ADMIN_SECRET` must be a random value with at least 32 characters. Do not use a placeholder or a human-readable password. Store it only in `.env.local` and Vercel environment variables.
+`ADMIN_SECRET` must be at least 8 characters and not a known placeholder. Store it only in `.env.local` and Vercel environment variables. For a public deployment prefer a long random value; a short memorable secret is only appropriate for a low-stakes local event.
 
 Example admin request:
 
