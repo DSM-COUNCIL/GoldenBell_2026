@@ -22,13 +22,6 @@ function entry(studentId: string, name: string): RosterEntry {
   };
 }
 
-// Temporary, easy-to-type accounts for testing. Remove before the real event.
-const TEST_ENTRIES: RosterEntry[] = [
-  entry("0001", "김철수"),
-  entry("0002", "이영희"),
-  entry("0003", "박민수"),
-];
-
 // Real student roster. [studentId, name]
 const REAL_ROSTER: Array<[string, string]> = [
   // 1학년 1반
@@ -91,10 +84,9 @@ const REAL_ROSTER: Array<[string, string]> = [
   ["3414", "하동건"], ["3415", "황인준"],
 ];
 
-export const rosterEntries: RosterEntry[] = [
-  ...TEST_ENTRIES,
-  ...REAL_ROSTER.map(([studentId, name]) => entry(studentId, name)),
-];
+export const rosterEntries: RosterEntry[] = REAL_ROSTER.map(([studentId, name]) =>
+  entry(studentId, name),
+);
 
 // studentId -> canonical name lookup, seeded into the database at seed time.
 export function buildRosterRecord(): Record<string, string> {
