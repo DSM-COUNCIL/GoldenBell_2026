@@ -1,4 +1,4 @@
-const MIN_SECRET_LENGTH = 32;
+const MIN_SECRET_LENGTH = 8;
 const PLACEHOLDER_SECRETS = new Set(["change-me", "change-me-before-deploy", "admin", "password"]);
 
 export type SecretValidation =

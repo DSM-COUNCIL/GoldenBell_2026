@@ -2,6 +2,13 @@
 .env.*
 !.env.example
 
+# Firebase service account keys — NEVER commit
+data/*firebase-adminsdk*.json
+*serviceAccount*.json
+
+# Local design reference screenshots
+test/*.png
+
 node_modules/
 .next/
 out/
